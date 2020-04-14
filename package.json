@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "babel lib -d dist",
-    "build-script": "browserify ./dist/*/*.js ./dist/constants.js ./dist/ServerError.js -o ./bundle.js"
+    "build-script": "browserify ./dist/kerberos_client/index.js -s Kerberos -o ./bundle.js && uglifyjs --compress -- ./bundle.js > ./bundle.min.js"
   },
   "author": "YJ",
   "license": "MIT",
@@ -17,6 +17,7 @@
     "@babel/core": "^7.9.0",
     "@babel/plugin-proposal-class-properties": "^7.8.3",
     "@babel/preset-env": "^7.9.5",
-    "browserify": "^16.5.1"
+    "browserify": "^16.5.1",
+    "uglify-js": "^3.9.0"
   }
 }
