@@ -1,1 +1,1 @@
-# Kerberos-Python-Library
+# Kerberos-JS-Module

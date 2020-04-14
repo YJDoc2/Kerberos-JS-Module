@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "babel lib -d dist",
-    "build-script": "browserify ./dist/crypto_classes/AESCryptor.js -o ./bundle.js"
+    "build-script": "browserify ./dist/*/*.js ./dist/constants.js ./dist/ServerError.js -o ./bundle.js"
   },
   "author": "YJ",
   "license": "MIT",
