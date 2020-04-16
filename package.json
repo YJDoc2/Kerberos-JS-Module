@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "babel lib -d dist",
-    "build-script": "browserify ./dist/kerberos_client/index.js -s Kerberos -o ./bundle.js && uglifyjs --compress -- ./bundle.js > ./bundle.min.js"
+    "build-script": "browserify ./dist/kerberos_client/index.js -s Kerberos -o ./kerberos.js && uglifyjs --compress -- ./kerberos.js > ./kerberos.min.js"
   },
   "author": "YJ",
   "license": "MIT",
