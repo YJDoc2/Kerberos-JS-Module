@@ -489,7 +489,7 @@ var Client = /*#__PURE__*/function () {
     }
 
     if (keymapDB == undefined) {
-      cryptor = new _db_classes.MemoryDB();
+      keymapDB = new _db_classes.MemoryDB();
     }
 
     if (!(cryptor instanceof _crypto_classes.Cryptor)) {
@@ -570,13 +570,21 @@ Object.defineProperty(exports, "AESCryptor", {
     return _crypto_classes.AESCryptor;
   }
 });
+Object.defineProperty(exports, "ServerError", {
+  enumerable: true,
+  get: function get() {
+    return _ServerError["default"];
+  }
+});
 
 var _client = _interopRequireDefault(require("./client"));
 
 var _crypto_classes = require("../crypto_classes");
 
+var _ServerError = _interopRequireDefault(require("../ServerError"));
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-},{"../crypto_classes":5,"./client":10}],12:[function(require,module,exports){
+},{"../ServerError":1,"../crypto_classes":5,"./client":10}],12:[function(require,module,exports){
 /*! MIT License. Copyright 2015-2018 Richard Moore <me@ricmoo.com>. See LICENSE.txt. */
 (function(root) {
     "use strict";
