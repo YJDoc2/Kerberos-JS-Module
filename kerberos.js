@@ -30,6 +30,7 @@ function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || func
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
+// Basic class for differentiating errors related to this library
 var ServerError = /*#__PURE__*/function (_Error) {
   _inherits(ServerError, _Error);
 
@@ -52,21 +53,25 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.REQ_INIT_VAL = exports.SERVER_INIT_RAND_MAX = exports.SERVER_INIT_RAND_MIN = exports.TICKET_LIFETIME = exports.AUTH_TICKET_LIFETIME = exports.TGT_INIT_VAL = exports.AUTH_INIT_VAL = void 0;
-var AUTH_INIT_VAL = 5;
+var AUTH_INIT_VAL = 5; // Init value for Auth ticket
+
 exports.AUTH_INIT_VAL = AUTH_INIT_VAL;
-var TGT_INIT_VAL = 5;
+var TGT_INIT_VAL = 5; // Init value for Ticket Granting Ticket
+
 exports.TGT_INIT_VAL = TGT_INIT_VAL;
 var AUTH_TICKET_LIFETIME = 24 * 60 * 60 * 60 * 1000; //1 Day
 
 exports.AUTH_TICKET_LIFETIME = AUTH_TICKET_LIFETIME;
 var TICKET_LIFETIME = 10 * 60 * 1000; //10 min
+// Min and max range for choosing a random value for init_val of new servers
 
 exports.TICKET_LIFETIME = TICKET_LIFETIME;
 var SERVER_INIT_RAND_MIN = 1;
 exports.SERVER_INIT_RAND_MIN = SERVER_INIT_RAND_MIN;
 var SERVER_INIT_RAND_MAX = 2147483647;
 exports.SERVER_INIT_RAND_MAX = SERVER_INIT_RAND_MAX;
-var REQ_INIT_VAL = 5;
+var REQ_INIT_VAL = 5; // Init val for encryption-decryption of tickets
+
 exports.REQ_INIT_VAL = REQ_INIT_VAL;
 },{}],3:[function(require,module,exports){
 (function (Buffer){
@@ -107,6 +112,16 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
 
 var aesjs = require('aes-js');
 
+/**
+ * Default class for all cryptographers required in library.
+ *
+ * This uses AES-JS library from ricmoo on https://www.npmjs.com/~ricmoo
+ * The NPM page of library is https://www.npmjs.com/package/aes-js
+ * The github page for library is https://github.com/ricmoo/aes-js
+ *
+ * This uses the AES 256 bit encryption of type CTR to encrypt and decrypt the given string
+ * Then it is converted to base-64 string to shorten the length and returned.
+ */
 var AESCryptor = /*#__PURE__*/function (_Cryptor) {
   _inherits(AESCryptor, _Cryptor);
 
@@ -116,29 +131,40 @@ var AESCryptor = /*#__PURE__*/function (_Cryptor) {
     _classCallCheck(this, AESCryptor);
 
     return _super.call(this);
-  }
+  } // key : key to encrypt the message, is one returned from getRandomKey
+  // valueStr : string to be encrypted
+  // A third integer argument must be provided which is used as init value for the counter required by CTR encryption
+
 
   _createClass(AESCryptor, [{
     key: "encrypt",
     value: function encrypt(key, valueStr) {
-      var aesctr = new aesjs.ModeOfOperation.ctr(aesjs.utils.utf8.toBytes(key.substr(0, 32)), new aesjs.Counter(arguments.length <= 2 ? undefined : arguments[2]));
+      var aesctr = new aesjs.ModeOfOperation.ctr(aesjs.utils.utf8.toBytes(key.substr(0, 32)), // substring is used in case the key is not of 256 bit length : 32*8 = 256
+      new aesjs.Counter(arguments.length <= 2 ? undefined : arguments[2]));
       var encBytes = aesctr.encrypt(aesjs.utils.utf8.toBytes(valueStr));
       var encTxtHex = aesjs.utils.hex.fromBytes(encBytes);
       var encTxtB64 = Buffer.from(encTxtHex, 'hex').toString('base64');
       return encTxtB64;
-    }
+    } // key : key to encrypt the message, is one returned from getRandomKey
+    // encStr : encrypted string
+    // A third integer argument must be provided which is used as init value for the counter required by CTR encryption
+
   }, {
     key: "decrypt",
     value: function decrypt(key, encStr) {
-      var aesctr = new aesjs.ModeOfOperation.ctr(aesjs.utils.utf8.toBytes(key.substr(0, 32)), new aesjs.Counter(arguments.length <= 2 ? undefined : arguments[2]));
+      var aesctr = new aesjs.ModeOfOperation.ctr(aesjs.utils.utf8.toBytes(key.substr(0, 32)), // substring is used in case the key is not of 256 bit length : 32*8 = 256
+      new aesjs.Counter(arguments.length <= 2 ? undefined : arguments[2]));
       var encStrHex = Buffer.from(encStr, 'base64').toString('hex');
       var decBytes = aesctr.decrypt(aesjs.utils.hex.toBytes(encStrHex));
       var decStr = aesjs.utils.utf8.fromBytes(decBytes);
       return decStr;
-    }
+    } // returns a random key used for encryption and decryption
+
   }, {
     key: "getRandomKey",
     value: function getRandomKey() {
+      // Every byyte is turned in 2 hexadecimal characters, so as we need 256 bits, i.e. 32 bytes
+      // we only get 16 random bytes.
       return (0, _crypto.randomBytes)(16).toString('hex');
     }
   }]);
@@ -162,6 +188,15 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+/**
+ * This is the interface-like class for all cryptographers required in the library.
+ * Extending class must implement encrypt,decrypt and getRandomKey methods.
+ * getRandomKey method is called whenever a new random key is needed to encrypt and object,
+ * and will be given as it is to encrypt and decrypt methods.
+ * Note that the key provided must be JSON Serializable, as it new servers will also obtain a key from here,
+ * and the server structure will be converted to a string before save.
+ * The ...args varargs is used in case the extending class requires any extra arguments for encryption/decryption
+ */
 var Cryptor = /*#__PURE__*/function () {
   function Cryptor() {
     _classCallCheck(this, Cryptor);
@@ -226,6 +261,10 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+/**
+ * This is the interface-like class for all databases required in the library.
+ * The extending classes must implement save and get methods.
+ */
 var DB = /*#__PURE__*/function () {
   function DB() {
     _classCallCheck(this, DB);
@@ -287,6 +326,13 @@ var path = require('path');
 
 var fs = require('fs');
 
+/**
+ * This is a class used as defualt DB for saving tickets and server data tickets.
+ * This creates a folder  on given path or else creates a folder called 'Tickets',
+ * in directory from which the process calling was invoked.
+ * This saves and loads data in plain text format, using JSON module to convert object to string, and string to object.
+ * All saved object files are named as given name.
+ */
 var LocalDB = /*#__PURE__*/function (_DB) {
   _inherits(LocalDB, _DB);
 
@@ -299,12 +345,14 @@ var LocalDB = /*#__PURE__*/function (_DB) {
 
     _classCallCheck(this, LocalDB);
 
-    _this = _super.call(this);
+    _this = _super.call(this); // If no ticket path is provided, defualt to Tickets in directory from which process calling this was invoked
+
     _this.ticketPath = undefined;
 
     if (ticketFolderPath === null) {
       ticketFolderPath = path.join('.', 'Tickets');
-    }
+    } // Create new directory if path does not exist
+
 
     if (!fs.existsSync(ticketFolderPath)) {
       fs.mkdirSync(ticketFolderPath);
@@ -318,19 +366,23 @@ var LocalDB = /*#__PURE__*/function (_DB) {
     key: "save",
     value: function save(serverName, ServerObj) {
       var pathname = path.join(this.ticketPath, serverName);
+      /** For default ticketPath, Servername = 'A' will create a text file
+       *  at path './Tickets/A'
+       */
+
       fs.writeFileSync(pathname, JSON.stringify(ServerObj));
     }
   }, {
     key: "get",
     value: function get(serverName) {
-      var pathname = path.join(this.ticketPath, serverName);
+      var pathname = path.join(this.ticketPath, serverName); // Any file with given name was not found
 
       if (!fs.existsSync(pathname)) {
         throw new _ServerError["default"]("Requested Server with name ".concat(serverName, " not Found"));
       }
 
       var ticketStr = '';
-      ticketStr = fs.readFileSync(pathname, 'utf8');
+      ticketStr = fs.readFileSync(pathname, 'utf8'); // Empty File, or some error in reading file
 
       if (ticketStr === '') {
         throw new _ServerError["default"]("Requested Server with name ".concat(serverName, " not Found"));
@@ -341,8 +393,10 @@ var LocalDB = /*#__PURE__*/function (_DB) {
         return t;
       } catch (e) {
         if (e instanceof SyntaxError) {
+          // Invalid Server Object
           throw new _ServerError["default"]("Requested Server with name ".concat(serverName, " not Found"));
         } else {
+          // Other possible errors, such as the encoding of string read is incompatible etc.
           throw e;
         }
       }
@@ -389,6 +443,12 @@ function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Re
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
+/**
+ * A DB that saves data in memory using map.
+ * Exists only till program is running.
+ * Usually would be faster than LocalDB.
+ * Default choice for saving random numbers used by a user.
+ */
 var MemoryDB = /*#__PURE__*/function (_DB) {
   _inherits(MemoryDB, _DB);
 
@@ -473,6 +533,12 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+/**
+ * Client class for Kerberos library. This does not actually set up any kind of client,but contains methods reuired on client side.
+ * This is conveted to a script to run in browser
+ * using browserify https://www.npmjs.com/package/browserify , https://github.com/browserify/browserify
+ * and then tries to compress using  uglify-js https://www.npmjs.com/package/uglify-js , https://github.com/mishoo/UglifyJS2
+ */
 var Client = /*#__PURE__*/function () {
   function Client(userKey) {
     var cryptor = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : undefined;
@@ -503,14 +569,16 @@ var Client = /*#__PURE__*/function () {
     this.cryptor = cryptor;
     this.key = userKey;
     this.keymap = keymapDB;
-  }
+  } // Encrypts a request object
+
 
   _createClass(Client, [{
     key: "encryptReq",
     value: function encryptReq(req, key) {
       var initVal = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _constants.TGT_INIT_VAL;
       return this.cryptor.encrypt(key, JSON.stringify(req), initVal);
-    }
+    } // Decrypts a encrypted response string
+
   }, {
     key: "decryptRes",
     value: function decryptRes(resEncStr, key) {
