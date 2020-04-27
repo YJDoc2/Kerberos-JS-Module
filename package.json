@@ -4,8 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "babel lib -d dist",
-    "build-script": "browserify ./dist/kerberos_client/index.js -s Kerberos  -o ./kerberos.js && uglifyjs --compress -- ./kerberos.js > ./kerberos.min.js"
+    "build": "npm run build-lib && npm run build-browser && npm run build-min",
+    "build-lib": "babel lib -d dist",
+    "build-script": "npm run build-browser && npm run build-min",
+    "build-browser": "browserify ./dist/kerberos_client/index.js -s Kerberos  -o ./kerberos.js",
+    "build-min": "uglifyjs --compress -- ./kerberos.js > ./kerberos.min.js",
+    "test": "mocha"
   },
   "author": "YJ",
   "license": "MIT",
@@ -18,6 +22,8 @@
     "@babel/plugin-proposal-class-properties": "^7.8.3",
     "@babel/preset-env": "^7.9.5",
     "browserify": "^16.5.1",
+    "chai": "^4.2.0",
+    "mocha": "^7.1.2",
     "uglify-js": "^3.9.0"
   }
 }

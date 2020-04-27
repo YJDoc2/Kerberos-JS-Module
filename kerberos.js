@@ -355,7 +355,9 @@ var LocalDB = /*#__PURE__*/function (_DB) {
 
 
     if (!fs.existsSync(ticketFolderPath)) {
-      fs.mkdirSync(ticketFolderPath);
+      fs.mkdirSync(ticketFolderPath, {
+        recursive: true
+      });
     }
 
     _this.ticketPath = ticketFolderPath;
