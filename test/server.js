@@ -56,10 +56,10 @@ describe('Basic Server tests', () => {
     mdb.save('abc', { key: 'abc', uid: 'abc', init_val: 5 });
     const s = Server.MakeServerFromDB('abc', null, mdb, true);
     expect(() => {
-      s.verifyRand('t1', 't2');
+      s.verifyRand(null, 't1', 't2');
     }).to.throw("'rand' is not present");
     expect(() => {
-      s.verifyRand('t1', 't2', {});
+      s.verifyRand({}, 't1', 't2');
     }).to.throw('rand must be a Number');
   });
 
@@ -69,13 +69,13 @@ describe('Basic Server tests', () => {
     const s = Server.MakeServerFromDB('abc', null, mdb, true);
     const rand = Math.ceil(Math.random() * 1000);
     expect(() => {
-      s.verifyRand('t1', 't2', rand);
+      s.verifyRand(rand, 't1', 't2');
     }).to.not.throw();
     expect(() => {
-      s.verifyRand('t1', 't2', Math.ceil(Math.random() * 1000));
+      s.verifyRand(Math.ceil(Math.random() * 1000), 't1', 't2');
     }).to.not.throw();
     expect(() => {
-      s.verifyRand('t1', 't2', rand);
+      s.verifyRand(rand, 't1', 't2');
     }).to.throw('The random number has already been used by the user');
   });
 });
@@ -93,13 +93,7 @@ describe('req-res server tests', () => {
 
   it('should decrypt valid ticket', () => {
     const tgt = tgs.getTGT('t1', 't2', cryptor.getRandomKey(), 5000);
-    const { res, ticket } = tgs.getResponseAndTicket(
-      't1',
-      't2',
-      tgt,
-      'abc',
-      50
-    );
+    const { res, ticket } = tgs.getResAndTicket(50, 'abc', 't1', 't2', tgt);
     expect(() => {
       s.verifyTicketAndGetKey('t1', 't2', ticket);
     }).to.not.throw();
@@ -112,14 +106,13 @@ describe('req-res server tests', () => {
       s.verifyTicketAndGetKey('t1', 't2', 'strooo');
     }).to.throw('Invalid Ticket');
 
-    const ticket0 = tgs.getResponseAndTicket('t1', 't2', tgt, 'abc', 50, 0)
-      .ticket;
+    const ticket0 = tgs.getResAndTicket(50, 'abc', 't1', 't2', tgt, -1).ticket;
 
     expect(() => {
       s.verifyTicketAndGetKey('t1', 't2', ticket0);
     }).to.throw('Ticket lifetime Exceeded');
 
-    const ticket1 = tgs.getResponseAndTicket('t1', 't2', tgt, 'abc', 50).ticket;
+    const ticket1 = tgs.getResAndTicket(50, 'abc', 't1', 't2', tgt).ticket;
 
     expect(() => {
       s.verifyTicketAndGetKey('t1', 't', ticket1);
@@ -128,10 +121,9 @@ describe('req-res server tests', () => {
       s.verifyTicketAndGetKey('t', 't1', ticket1);
     }).to.throw('Invalid Ticket Holder');
 
-    const ticket2 = tgs.getResponseAndTicket('t1', 't2', tgt, 'ccc', 50).ticket;
-
+    const ticket2 = tgs.getResAndTicket(50, 'ccc', 't1', 't2', tgt).ticket;
     expect(() => {
-      s.verifyTicketAndGetKey('t1', 't2', ticket2);
+      console.log(s.verifyTicketAndGetKey('t1', 't2', ticket2));
     }).to.throw('Invalid Ticket');
   });
 });

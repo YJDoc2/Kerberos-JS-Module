@@ -78,7 +78,7 @@ describe('LocalDB class tests', () => {
     fs.unlinkSync('./Tickets/test');
   });
 
-  it('should be able to saved data', () => {
+  it('should be able to get saved data', () => {
     const ldb = new LocalDB('./testtickets');
     ldb.save('test', 'test');
     const data = ldb.get('test');
@@ -110,7 +110,7 @@ describe('LocalDB class tests', () => {
     fs.writeFileSync('./Tickets/test', "{'test':'");
     expect(() => {
       ldb.get('test');
-    }).to.throw('Requested Server with name test not Found');
+    }).to.throw('Error in decoding server information');
     fs.unlinkSync('./Tickets/test');
   });
 });

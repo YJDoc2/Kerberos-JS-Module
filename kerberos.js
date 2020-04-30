@@ -52,7 +52,7 @@ exports["default"] = ServerError;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.REQ_INIT_VAL = exports.SERVER_INIT_RAND_MAX = exports.SERVER_INIT_RAND_MIN = exports.TICKET_LIFETIME = exports.AUTH_TICKET_LIFETIME = exports.TGT_INIT_VAL = exports.AUTH_INIT_VAL = void 0;
+exports.SERVER_INIT_RAND_MAX = exports.SERVER_INIT_RAND_MIN = exports.TICKET_LIFETIME = exports.AUTH_TICKET_LIFETIME = exports.TGT_INIT_VAL = exports.AUTH_INIT_VAL = void 0;
 var AUTH_INIT_VAL = 5; // Init value for Auth ticket
 
 exports.AUTH_INIT_VAL = AUTH_INIT_VAL;
@@ -70,9 +70,6 @@ var SERVER_INIT_RAND_MIN = 1;
 exports.SERVER_INIT_RAND_MIN = SERVER_INIT_RAND_MIN;
 var SERVER_INIT_RAND_MAX = 2147483647;
 exports.SERVER_INIT_RAND_MAX = SERVER_INIT_RAND_MAX;
-var REQ_INIT_VAL = 5; // Init val for encryption-decryption of tickets
-
-exports.REQ_INIT_VAL = REQ_INIT_VAL;
 },{}],3:[function(require,module,exports){
 (function (Buffer){
 "use strict";
@@ -394,13 +391,7 @@ var LocalDB = /*#__PURE__*/function (_DB) {
         var t = JSON.parse(ticketStr);
         return t;
       } catch (e) {
-        if (e instanceof SyntaxError) {
-          // Invalid Server Object
-          throw new _ServerError["default"]("Requested Server with name ".concat(serverName, " not Found"));
-        } else {
-          // Other possible errors, such as the encoding of string read is incompatible etc.
-          throw e;
-        }
+        throw new _ServerError["default"]('Error in decoding server information');
       }
     }
   }]);
@@ -529,6 +520,10 @@ var _db_classes = require("../db_classes");
 
 var _crypto_classes = require("../crypto_classes");
 
+var _ServerError = _interopRequireDefault(require("../ServerError"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -542,9 +537,9 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
  * and then tries to compress using  uglify-js https://www.npmjs.com/package/uglify-js , https://github.com/mishoo/UglifyJS2
  */
 var Client = /*#__PURE__*/function () {
-  function Client(userKey) {
-    var cryptor = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : undefined;
-    var keymapDB = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : undefined;
+  function Client() {
+    var cryptor = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : undefined;
+    var keymapDB = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : undefined;
 
     _classCallCheck(this, Client);
 
@@ -569,21 +564,20 @@ var Client = /*#__PURE__*/function () {
     }
 
     this.cryptor = cryptor;
-    this.key = userKey;
     this.keymap = keymapDB;
   } // Encrypts a request object
 
 
   _createClass(Client, [{
     key: "encryptReq",
-    value: function encryptReq(req, key) {
+    value: function encryptReq(key, req) {
       var initVal = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _constants.TGT_INIT_VAL;
       return this.cryptor.encrypt(key, JSON.stringify(req), initVal);
     } // Decrypts a encrypted response string
 
   }, {
     key: "decryptRes",
-    value: function decryptRes(resEncStr, key) {
+    value: function decryptRes(key, resEncStr) {
       var initVal = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _constants.TGT_INIT_VAL;
       var resStr = this.cryptor.decrypt(key, resEncStr, initVal);
       var res = {};
@@ -592,7 +586,7 @@ var Client = /*#__PURE__*/function () {
         res = JSON.parse(resStr);
       } catch (e) {
         if (e instanceof SyntaxError) {
-          throw new ServerError('Incorrect Response');
+          throw new _ServerError["default"]('Incorrect Response');
         } else {
           throw e;
         }
@@ -616,7 +610,7 @@ var Client = /*#__PURE__*/function () {
 }();
 
 exports["default"] = Client;
-},{"../constants":2,"../crypto_classes":5,"../db_classes":9}],11:[function(require,module,exports){
+},{"../ServerError":1,"../constants":2,"../crypto_classes":5,"../db_classes":9}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
