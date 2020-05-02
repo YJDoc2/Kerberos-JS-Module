@@ -1,5 +1,9 @@
 # Kerberos-JS API References
 
+<strong>Note</strong> that some methods of API have a large number of params, upto 6, clearly breaking the max-number-of-params-should-be-3 guideline of good programming.For slightly easier use of these, **all params** of **all** methods follow the following order :  
+random number ; request server ; UIDs for user : key ; encryption/decryption data ; tickets ; optional params.
+whichever are present.
+
 ## Index
 
 <ul>
@@ -63,13 +67,13 @@
                     <li><a href='#kerberos-tgs-verify-tgt-and-get-key'>verifyTGTAndGetKey(cUid1, cUid2, tgtEncStr)</a></li>
                     <li><a href='#kerberos-tgs-decrypt-req'>decryptReq(encReqStr, tgt)</a></li>
                     <li><a href='#kerberos-tgs-verify-rand'>verifyRand(rand,cUid1, cUid2)</a></li>
-                    <li><a href='#kerberos-tgs-get-response-and-ticket'>getResponseAndTicket(rand,reqServer,cUid1,cUid2,tgt,lifetimeMs = TICKET_LIFETIME)</a></li>
+                    <li><a href='#kerberos-tgs-get-res-and-ticket'>getResAndTicket(rand,reqServer,cUid1,cUid2,tgt,lifetimeMs = TICKET_LIFETIME)</a></li>
                 </ul>
             </li>
             <li><a href='#class-kerberos-kdc'>KerberosKDC</a>
                 <ul>
                     <li><a href='#kerberos-kdc-constructor'>constructor(cryptor = undefined,serverDB = undefined,checkRand = false,verifyRandDB = undefined)</a></li>
-                    <li><a href='#kerberos-kdc-gen-auth-tickets'>genAuthTickets(rand,cUid1,cUid2,userHash,lifetimeMs = AUTH_TICKET_LIFETIME)</a></li>
+                    <li><a href='#kerberos-kdc-make-auth-tickets'>makeAuthTickets(rand,cUid1,cUid2,userHash,lifetimeMs = AUTH_TICKET_LIFETIME)</a></li>
                     <li><a href='#kerberos-kdc-add-server'>addServer(sUid)</a></li>
                     <li><a href='#kerberos-kdc-get-res-and-ticket'>getResAndTicket(rand,reqServer,cUid1,cUid2,tgt,lifetimeMs = TICKET_LIFETIME)</a></li>
                     <li><a href='#kerberos-kdc-decrypt-req'>decryptReq(encReqStr, tgt)</a></li>
@@ -82,6 +86,7 @@
         <ul>
             <li><a href='#server-make-server-from-db'>Static MakeServerFromDB(name,cryptor = null,db = null,checkRand = false,verifyRandDB = undefined)</a></li>
             <li><a href='#server-constructor'>constructor(serverObj,cryptor=undefined,checkRand=false,verifyRandDB=undefined)</a></li>
+            <li><a href='#server-decrypt-ticket'>decryptTicket(encTicket)</a></li>
             <li><a href='#server-verify-ticket-and-get-key'>verifyTicketAndGetKey(cUid1,cUid2,ticketEncStr)</a></li>
             <li><a href='#server-decrypt-req'>decryptReq(reqEncStr,ticket)</a></li>
             <li><a href='#server-encrypt-res'>encryptRes(cUid1,cUid2,response,ticket)</a></li>
@@ -127,7 +132,7 @@
 Params :
 <ul>
     <li>name {string} : The key that the data should be associated with. Same will be used for retrieving the data</li>
-    <li>data {Object} : The data that is to be saved</li>
+    <li>data {Any} : The data that is to be saved</li>
 </ul>
 Returns : {void}
 
@@ -137,7 +142,7 @@ Params :
 <ul>
     <li>name {string} : the key that the data was saved with</li>
 </ul>
-Returns : {Object} The data that was saved.
+Returns : {Any} The data that was saved.
 </div>
 
 <div>
@@ -152,7 +157,7 @@ Returns : {Object} The data that was saved.
 Params :
 <ul>
     <li>name {string} : The key that the data should be associated with. Same will be used for retrieving the data</li>
-    <li>data {Object} : The data that is to be saved</li>
+    <li>data {Any} : The data that is to be saved</li>
 </ul>
 Returns : {void}
 
@@ -162,14 +167,14 @@ Params :
 <ul>
     <li>name {string} : the key that the data was saved with</li>
 </ul>
-Returns : {Object} The data that was saved.
+Returns : {Any} The data that was saved corresponding to key.
 </div>
 
 <div>
 <h4 id='class-local-db'>Class LocalDB</h4>
 <p>This class uses File System to save data in files on disk. </p>
 
-<h5 id='local-db-constructor'>constructor(ticketFolderPath = null)</h5>
+<h5 id='local-db-constructor'>constructor(ticketFolderPath = undefined)</h5>
 <p>This by default creates a folder named 'Tickets' in the directory from which program was invoked if no parameter is given. Otherwise The given path is constructed if not present and is used for saving the data.</p>
 Params:
 <ul>
@@ -271,7 +276,7 @@ Params :
 <ul>
     <li>cryptor {Cryptor} : An instance of a cryptographic class used for encryption and decryption. Must extend the Cryptor class</li>
     <li>tgs : {KerberosTGS} : An instance of KerberosTGS class. This is used for generating ticket granting ticket</li>
-    <li>checkRand {Boolean} : Enables the verifyRandom Method to prevent replay attacks.The verifyRandomDB is used to store user-to-used-numbers connections.Defaults to false if not provided.</li>
+    <li>checkRand {Boolean} : Enables the verifyRandom Method to prevent replay attacks.The verifyRandDB is used to store user-to-used-numbers connections.Defaults to false if not provided.</li>
     <li>verifyRandDB {DB} : DB used to store mapping of user to used numbers.Defaults to MemoryDB if not provided.</li>
 </ul>
 Returns : {Object} An instance of KerberosAS class.
@@ -290,7 +295,7 @@ Params :
 Returns : {Object} 
 <p>An object that contains response meant for user encrypted by userHash and encrypted Ticket Granting Ticket for TGS in auth and tgt fields respectively.The auth object contains both UIDs,timestamp, the random number,lifetime and a key that is supposed to be used by client for encrypting the request to TGS.</p>
 
-<h4 id='class-kerberos-tgs'>KerberosTGS</h3>
+<h4 id='class-kerberos-tgs'>Class KerberosTGS</h3>
 <p>This class contains method useful for Ticket Granting Service of Kerberos.</p>
 
 <h5 id='kerberos-tgs-constructor'>constructor(cryptor, db, checkRand = false, verifyRandDB = undefined)</h5>
@@ -298,8 +303,8 @@ Returns : {Object}
 Params:
 <ul>
     <li>cryptor {Cryptor} : An instance of a cryptographic class used for encryption and decryption. Must extend the Cryptor class</li>
-    <li>sdb {DB} : Instance of a class extending DB class.This is used for saving the Server structures generated by addServer()</li>
-    <li>checkRand {Boolean} : Enables the verifyRandom Method to prevent replay attacks.The verifyRandomDB is used to store user-to-used-numbers connections.Defaults to false if not provided.</li>
+    <li>db {DB} : Instance of a class extending DB class.This is used for saving the Server structures generated by addServer()</li>
+    <li>checkRand {Boolean} : Enables the verifyRandom Method to prevent replay attacks.The verifyRandDB is used to store user-to-used-numbers connections.Defaults to false if not provided.</li>
     <li>verifyRandDB {DB} : DB used to store mapping of user to used numbers.Defaults to MemoryDB if not provided.</li>
 </ul>
 Returns : {Object} An instance of class KerberosTGS.
@@ -360,9 +365,9 @@ Params:
     <li>cUid2 {string/Number} : An identifier unique to the user.This is verified with the uid inside the ticket to check if user is the valid holder. Eg: username,ip address etc.</li>
 </ul>
 Returns : {void} nothing is the random number is used for the first time by the user.<br />
-Throws : ServerError is the random number was already used by the user.
+Throws : {ServerError} is the random number was already used by the user.
 
-<h5 id='kerberos-tgs-get-response-and-ticket'>getResponseAndTicket(rand,reqServer,cUid1,cUid2,tgt,lifetimeMs = TICKET_LIFETIME)</h5>
+<h5 id='kerberos-tgs-get-res-and-ticket'>getResAndTicket(rand,reqServer,cUid1,cUid2,tgt,lifetimeMs = TICKET_LIFETIME)</h5>
 <p>Method to generate response and Ticket for a particular server.</p>
 Params :
 <ul>
@@ -372,8 +377,12 @@ Params :
     <li>cUid2 {string/Number} : An identifier unique to the user.This is verified with the uid inside the ticket to check if user is the valid holder. Eg: username,ip address etc.</li>
     <li>tgt {string} : the Ticket Granting ticket that is sent with the request.This will be verified before generating ticket and response.</li>
     <li>lifetimeMS {Number} : Lifetime of generated ticket in milliseconds. defaults to TICKET_LIFETIME if not provided.</li>
+</ul>
+Returns : {Object} if successful
+<p>An object that contains response meant for user encrypted by key in tgt and encrypted Ticket for Server in res and ticket fields respectively.The res object contains timestamp, the random number,lifetime and a key that is supposed to be used by client for encrypting the request to TGS and initialization vale for encryption. </p>
+Throws : {ServerError} if the tgt is not valid.
 
-<h4 id='class-kerberos-kdc'>KerberosKDC</h4>
+<h4 id='class-kerberos-kdc'>Class KerberosKDC</h4>
 <p>An interface class that provides an easier interface for both Authentication ans Ticket Granting Services.This provides exactly same methods provided by KerberosAS and KerberosTGS class, but can be used instead of maintaining instances of each of them, if the AS and TGS are in the same program.</p>
 
 <h5 id='kerberos-kdc-constructor'>constructor(cryptor = undefined,serverDB = undefined,checkRand = false,verifyRandDB = undefined)</h5>
@@ -382,11 +391,12 @@ Params :
 <ul>
     <li>cryptor {Cryptor} : Instance of a class extending Cryptor.Defaults to AESCryptor if not provided.</li>
     <li>serverDB {DB} : Instance of a class extending DB class.This is used for saving the Server structures generated by addServer()</li>
-    <li>checkRand {Boolean} : Enables the verifyRandom Method to prevent replay attacks.The verifyRandomDB is used to store user-to-used-numbers connections.Defaults to false if not provided.</li>
+    <li>checkRand {Boolean} : Enables the verifyRandom Method to prevent replay attacks.The verifyRandDB is used to store user-to-used-numbers connections.Defaults to false if not provided.</li>
     <li>verifyRandDB {DB} : DB used to store mapping of user to used numbers.Defaults to MemoryDB if not provided.</li>
 </ul>
+Returns : {Object} An instance of Kerberos_KDC class.
 
-<h5 id='kerberos-kdc-gen-auth-tickets'>genAuthTickets(rand,cUid1,cUid2,userHash,lifetimeMs = AUTH_TICKET_LIFETIME)</h5>
+<h5 id='kerberos-kdc-make-auth-tickets'>makeAuthTickets(rand,cUid1,cUid2,userHash,lifetimeMs = AUTH_TICKET_LIFETIME)</h5>
 <p>Method to generate initial authentication response and Ticket Granting Ticket.</p>
 <ul>
     <li>rand {Number} : the random number sent by the user in the request</li>
@@ -440,7 +450,7 @@ Params:
     <li>cUid2 {string/Number} : An identifier unique to the user.This is verified with the uid inside the ticket to check if user is the valid holder. Eg: username,ip address etc.</li>
 </ul>
 Returns : {void} nothing is the random number is used for the first time by the user.<br />
-Throws : ServerError is the random number was already used by the user.
+Throws : {ServerError} is the random number was already used by the user.
 
 </div>
 
@@ -457,7 +467,7 @@ Params:
     <li>name {string} : name of the server that is to be made.This is used as the key to find the server structure in DB.</li>
     <li>cryptor {Cryptor} : Instance of a class extending Cryptor.Defaults to AESCryptor if not provided.</li>
     <li>db {DB} : Instance of a class extending DB class.This must be able to retrieve the server structure generated by TGS.Defaults to LocalDB is not provided.</li>
-    <li>checkRand {Boolean} : Enables the verifyRandom Method to prevent replay attacks.The verifyRandomDB is used to store user-to-used-numbers connections.Defaults to false if not provided.</li>
+    <li>checkRand {Boolean} : Enables the verifyRandom Method to prevent replay attacks.The verifyRandDB is used to store user-to-used-numbers connections.Defaults to false if not provided.</li>
     <li>verifyRandDB {DB} : DB used to store mapping of user to used numbers.Defaults to MemoryDB if not provided.</li>
 </ul>
 Returns : {Object} An instance of Server Class.
@@ -468,10 +478,19 @@ Params:
 <ul>
     <li>ServerObj {Object} : An object containing key,init_val and uid(name) of the server.Should be the structure generated by TGS.Throws TypeError if any of three is missing.</li>
     <li>cryptor {Cryptor} : Instance of a class extending Cryptor.Defaults to AESCryptor if not provided.</li>
-    <li>checkRand {Boolean} : Enables the verifyRand Method to prevent replay attacks.The verifyRandomDB is used to store user-to-used-numbers connections.Defaults to false if not provided.</li>
+    <li>checkRand {Boolean} : Enables the verifyRand Method to prevent replay attacks.The verifyRandDB is used to store user-to-used-numbers connections.Defaults to false if not provided.</li>
     <li>verifyRandDB {DB} : DB used to store mapping of user to used numbers.Defaults to MemoryDB if not provided.</li>
 </ul>
 Returns : {Object} An instance of Server Class.
+
+<h5 id='server-decrypt-ticket'>decryptTicket(encTicket)</h5>
+<p><strong>NOTE : This is an internal method that should not be used from outside</strong></p>
+<p>A method to decrypt Ticket. This does not verify if the ticket is valid.</p>
+Params :
+<ul>
+    <li>encTicket {String} : encrypted ticket string</li>
+</ul>
+Returns : {Object} this returns the decrypted JSON object of ticket.
 
 <h5 id ='server-verify-ticket-and-get-key'>verifyTicketAndGetKey(cUid1,cUid2,ticketEncStr)</h5>
 <p>Method used to verify the ticket received and get the secrete key in the ticket</p>
@@ -485,7 +504,7 @@ Returns : {String/Number} The secrete key inside the ticket that is used to decr
 
 <h5 id='server-decrypt-req'>decryptReq(reqEncStr,ticket)</h5>
 <p>Method used to decrypt the request of user.</p>
-<p><strong>NOTE that this does not verify if the user is valid holder of ticket, or the ticket is valid or not. This just decrypts the request.</strong></p>
+<p><strong>NOTE : this does not verify if the user is valid holder of ticket, or the ticket is valid or not. This just decrypts the request.</strong></p>
 <p>THe reason behind keeping this method is that it is not necessary to send just an encrypted object as a request. The request itself can be another encrypted string or so,which is then again encrypted with key in ticket.Server can use this to decrypt it and obtained the string inside, which can be further decrypted if required.</p>
 Params :
 <ul>
@@ -514,7 +533,7 @@ Params:
     <li>cUid2 {string/Number} : An identifier unique to the user.This is verified with the uid inside the ticket to check if user is the valid holder. Eg: username,ip address etc.</li>
 </ul>
 Returns : {void} nothing is the random number is used for the first time by the user.<br />
-Throws : ServerError is the random number was already used by the user.
+Throws : {ServerError} is the random number was already used by the user.
 </div>
 
 <h3 id='class-client'>Kerberos Client</h3>

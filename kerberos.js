@@ -338,7 +338,7 @@ var LocalDB = /*#__PURE__*/function (_DB) {
   function LocalDB() {
     var _this;
 
-    var ticketFolderPath = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    var ticketFolderPath = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : undefined;
 
     _classCallCheck(this, LocalDB);
 
@@ -346,7 +346,7 @@ var LocalDB = /*#__PURE__*/function (_DB) {
 
     _this.ticketPath = undefined;
 
-    if (ticketFolderPath === null) {
+    if (!ticketFolderPath) {
       ticketFolderPath = path.join('.', 'Tickets');
     } // Create new directory if path does not exist
 
