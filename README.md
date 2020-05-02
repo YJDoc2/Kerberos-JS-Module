@@ -15,7 +15,7 @@ Also For example usage of this , check out <a href='https://github.com/YJDoc2/Ke
 
 ## About
 
-This module provides classes for setting up Kerberos protection methods over a protocol.
+This module provides classes for setting up Kerberos methods over a protocol.
 
 This contains has three main parts :
 
@@ -60,18 +60,18 @@ The lib folder contains the files used for development, and the dist folder cont
 
 The outermost index.js file exports all the components from dist folder in common js.
 
-All classes and constants exported by the module can be brought in by using :
-<code>const Kerberos = require('path/to/kerberos-js/folder');</code>
-After which individual components can be used as :
+All classes and constants exported by the module can be brought in by using :<br />
+<code>const Kerberos = require('path/to/kerberos-js/folder');</code><br />
+After which individual components can be used as :<br />
 <code>const componentClassInstance = Kerberos.componentClassName();</code>
 
 <strong>Note</strong> that some methods of API have a large number of params, upto 6, clearly breaking the max-number-of-params-should-be-3 guideline of good programming.For slightly easier use of these, **all params** of **all** methods follow the following order :  
-random number ; request server ; UIDs for user : key ; encryption/decryption data ; tickets ; optional params.
+random number ; request server ; UIDs for user : key ; encryption/decryption data ; tickets ; optional params.<br />
 whichever are present.
 
 ## Build Information
 
-Initially use of TypeScript was considered for the library, but was not used.
+Run <code>npm run build</code> for building the library.
 This library uses babel for having the easier import syntax, and then compiling it to common-js.
 The package json file contains scripts for building the library : <code>build</code> for compiling the module,then generating kerberos js using browserify and compressing it using uglify-js.
 Then their are scripts that achieve the individual steps in that building process.
